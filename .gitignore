@@ -1,0 +1,6 @@
+/kafka-logs/*
+/zoo-data/*
+
+!kafka-logs/.gitkeep 
+!zoo-data/.gitkeep 
+

@@ -4,23 +4,29 @@ services:
     image: kafka:latest
     volumes: 
       - ./zoo-data:/tmp/zookeeper
+      - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - 2181:2181
     networks: 
       - overlay
+    environment:
+      HOSTNAME_COMMAND: "docker info | grep ^Name: | cut -d' ' -f 2"
     command: /kafka/bin/zookeeper-server-start.sh /kafka/config/zookeeper.properties 
 
   kafka: 
     image: kafka:latest
     volumes: 
        - ./kafka-logs:/tmp/kafka-logs
+       - /var/run/docker.sock:/var/run/docker.sock
     ports: 
        - 9092:9092
     networks:
        - overlay
+    environment:
+      HOSTNAME_COMMAND: "docker info | grep ^Name: | cut -d' ' -f 2"
     depends_on:
        - zookeeper
-    command: /kafka/bin/kafka-server-start.sh /kafka/config/server.properties --override zookeeper.connect=zookeeper:2181 --override listeners=INTERNAL://kafka:9092 --override listener.security.protocol.map=INTERNAL:PLAINTEXT --override inter.broker.listener.name=INTERNAL
+    command: /kafka/bin/kafka-server-start.sh /kafka/config/server.properties --override zookeeper.connect=zookeeper:2181 --override listeners=EXT://kafka:9092,INT://kafka:9093 --override listener.security.protocol.map=INT:PLAINTEXT,EXT:PLAINTEXT --override inter.broker.listener.name=INT --override advertised.listeners=EXT://localhost:9092,INT://kafka:9093
 
 networks:
   overlay: 

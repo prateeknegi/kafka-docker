@@ -13,20 +13,47 @@ services:
       HOSTNAME_COMMAND: "docker info | grep ^Name: | cut -d' ' -f 2"
     command: /kafka/bin/zookeeper-server-start.sh /kafka/config/zookeeper.properties 
 
-  kafka: 
+  kafka1: 
     image: kafka:latest
     volumes: 
-       - ./kafka-logs:/tmp/kafka-logs
+       - ./kafka1-logs:/tmp/kafka-logs
        - /var/run/docker.sock:/var/run/docker.sock
     ports: 
-       - 9092:9092
+       - 9094:9094
     networks:
        - overlay
-    environment:
-      HOSTNAME_COMMAND: "docker info | grep ^Name: | cut -d' ' -f 2"
     depends_on:
        - zookeeper
-    command: /kafka/bin/kafka-server-start.sh /kafka/config/server.properties --override zookeeper.connect=zookeeper:2181 --override listeners=EXT://kafka:9092,INT://kafka:9093 --override listener.security.protocol.map=INT:PLAINTEXT,EXT:PLAINTEXT --override inter.broker.listener.name=INT --override advertised.listeners=EXT://localhost:9092,INT://kafka:9093
+    command: /kafka/bin/kafka-server-start.sh /kafka/config/server.properties --override zookeeper.connect=zookeeper:2181 --override listeners=EXT://kafka1:9094,INT://kafka1:9093 --override listener.security.protocol.map=INT:PLAINTEXT,EXT:PLAINTEXT --override inter.broker.listener.name=INT --override advertised.listeners=EXT://localhost:9094,INT://kafka1:9093 --override broker.id=1
+  
+  kafka2: 
+    image: kafka:latest
+    volumes: 
+       - ./kafka2-logs:/tmp/kafka-logs
+       - /var/run/docker.sock:/var/run/docker.sock
+    ports: 
+       - 9095:9095
+    networks:
+       - overlay
+    depends_on:
+       - zookeeper
+    command: /kafka/bin/kafka-server-start.sh /kafka/config/server.properties --override zookeeper.connect=zookeeper:2181 --override listeners=EXT://kafka2:9095,INT://kafka2:9093 --override listener.security.protocol.map=INT:PLAINTEXT,EXT:PLAINTEXT --override inter.broker.listener.name=INT --override advertised.listeners=EXT://localhost:9095,INT://kafka2:9093 --override broker.id=2
+
+
+  kafka3: 
+    image: kafka:latest
+    volumes: 
+       - ./kafka3-logs:/tmp/kafka-logs
+       - /var/run/docker.sock:/var/run/docker.sock
+    ports: 
+       - 9096:9096
+    networks:
+       - overlay
+    depends_on:
+       - zookeeper
+    command: /kafka/bin/kafka-server-start.sh /kafka/config/server.properties --override zookeeper.connect=zookeeper:2181 --override listeners=EXT://kafka3:9096,INT://kafka3:9093 --override listener.security.protocol.map=INT:PLAINTEXT,EXT:PLAINTEXT --override inter.broker.listener.name=INT --override advertised.listeners=EXT://localhost:9096,INT://kafka3:9093 --override broker.id=3
+
+
 
 networks:
   overlay: 

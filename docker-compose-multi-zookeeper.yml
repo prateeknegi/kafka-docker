@@ -1,0 +1,40 @@
+version: '3'
+services:
+  zookeeper1:
+    image: kafka:latest
+    volumes:
+      - ./zoo-data1:/tmp/zookeeper
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 2182:2181
+    networks:
+      - overlay
+    command: /kafka/bin/zookeeper-server-start.sh /kafka/config/zookeeper.properties
+
+  zookeeper2:
+    image: kafka:latest
+    volumes:
+      - ./zoo-data2:/tmp/zookeeper
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 2183:2181
+    networks:
+      - overlay
+    command: /kafka/bin/zookeeper-server-start.sh /kafka/config/zookeeper.properties
+
+  kafka:
+    image: kafka:latest
+    volumes:
+       - ./kafka-logs:/tmp/kafka-logs
+       - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+       - 9093:9093
+    networks:
+       - overlay
+    depends_on:
+       - zookeeper1
+       - zookeeper2
+    command: /kafka/bin/kafka-server-start.sh /kafka/config/server.properties --override zookeeper.connect=zookeeper1:2181,zookeeper2:2181  --override listeners=EXT://kafka:9093,INT://kafka:9092 --override listener.security.protocol.map=INT:PLAINTEXT,EXT:PLAINTEXT --override inter.broker.listener.name=INT --override advertised.listeners=EXT://localhost:9093,INT://kafka:9092
+
+networks:
+  overlay:

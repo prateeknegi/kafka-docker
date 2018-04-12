@@ -1,0 +1,42 @@
+version: '3'
+services:
+  zookeeper:
+    image: kafka:latest
+    volumes:
+      - zoo-single-data:/tmp/zookeeper
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "2181:2181"
+    networks:
+      - overlay
+    deploy:
+      mode: global
+      placement: 
+        constraints: 
+          - node.labels.zoo==1
+    command: /kafka/bin/zookeeper-server-start.sh /kafka/config/zookeeper.properties
+
+  kafka1:
+    image: kafka:latest
+    volumes:
+       - kafka-single-logs:/tmp/kafka-logs
+       - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+       - "9094:9094"
+    networks:
+       - overlay
+    depends_on:
+       - zookeeper
+    deploy: 
+      mode: global
+      placement: 
+        constraints: 
+          - node.labels.kafka==1
+    command: /kafka/bin/kafka-server-start.sh /kafka/config/server.properties --override zookeeper.connect=zookeeper:2181 --override listeners=EXT://kafka1:9094,INT://kafka1:9093 --override listener.security.protocol.map=INT:PLAINTEXT,EXT:PLAINTEXT --override inter.broker.listener.name=INT --override advertised.listeners=EXT://node3:9094,INT://kafka1:9093 --override broker.id=1
+
+networks:
+  overlay:
+
+volumes:
+  kafka-single-logs:
+  zoo-single-data:

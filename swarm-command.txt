@@ -1,0 +1,249 @@
+# create network
+docker network create --driver overlay kafka-net
+
+docker service create \
+   --name zookeeper \
+   --mount type=volume,source=zoo-swarm-data,destination=/tmp/zookeeper \
+   --publish 2181:2181 \
+   --network kafka-net \
+   --constraint node.labels.zoo==1 \
+   --mode global \
+   kafka:latest \
+   /kafka/bin/zookeeper-server-start.sh /kafka/config/zookeeper.properties
+
+docker service create \
+   --name kafka1 \
+   --mount type=volume,source=kafka-swarm-logs,destination=/tmp/kafka-logs \
+   --publish 9094:9094 \
+   --network kafka-net \
+   --mode global \
+   --constraint node.labels.kafka==1 \
+    kafka:latest \
+  /kafka/bin/kafka-server-start.sh /kafka/config/server.properties \
+     --override zookeeper.connect=zookeeper:2181 \
+     --override listeners=INT://kafka1:9093,EXT://kafka1:9094 \
+     --override listener.security.protocol.map=INT:PLAINTEXT,EXT:PLAINTEXT \
+     --override inter.broker.listener.name=INT \
+     --override advertised.listeners=INT://kafka1:9093,EXT://localhost:9094 \
+     --override broker.id=1
+
+#------------
+
+docker service create \
+   --name kafka1 \
+   --mount type=volume,source=kafka-swarm-logs,destination=/tmp/kafka-logs \
+   --publish 9094:9094 \
+   --network kafka-net \
+   --mode global \
+   --constraint node.labels.kafka==1 \
+    kafka:latest \
+  /kafka/bin/kafka-server-start.sh /kafka/config/server.properties \
+     --override zookeeper.connect=zookeeper:2181 \
+     --override listeners=LISTENER1://kafka1:9092 \
+     --override listener.security.protocol.map=LISTENER1:PLAINTEXT \
+    --override inter.broker.listener.name=LISTENER1 \
+     --override advertised.listeners=LISTENER1://kafka1:9092 \
+     --override broker.id=1
+
+# USing tasks.kafka1
+     docker service create \
+        --name kafka1 \
+        --mount type=volume,source=kafka-swarm-logs,destination=/tmp/kafka-logs \
+        --publish 9092:9092 \
+        --network kafka-net \
+        --mode global \
+        --constraint node.labels.kafka==1 \
+         kafka:latest \
+       /kafka/bin/kafka-server-start.sh /kafka/config/server.properties \
+          --override zookeeper.connect=zookeeper:2181 \
+          --override listeners=LISTENER1://tasks.kafka1:9092 \
+          --override listener.security.protocol.map=LISTENER1:PLAINTEXT \
+         --override inter.broker.listener.name=LISTENER1 \
+          --override advertised.listeners=LISTENER1://tasks.kafka1:9092 \
+          --override broker.id=1
+
+# Setup Kafka with its hostname
+docker service create \
+   --name kafka1 \
+   --mount type=volume,source=kafka-swarm-logs,destination=/tmp/kafka-logs \
+   --publish 9093:9093 \
+   --network kafka-net \
+   --mode global \
+   --constraint node.labels.kafka==1 \
+    kafka:latest \
+  /kafka/bin/kafka-server-start.sh /kafka/config/server.properties \
+     --override zookeeper.connect=zookeeper:2181 \
+     --override listeners=LISTENER1://:9092,LISTENER2://localhost:9093 \
+     --override listener.security.protocol.map=LISTENER1:PLAINTEXT,LISTENER2:PLAINTEXT \
+    --override inter.broker.listener.name=LISTENER1 \
+     --override advertised.listeners=LISTENER1://:9092,LISTENER2://localhost:9093 \
+     --override broker.id=1
+
+# This worked from inside and outside
+# From Zookeeper container: bin/kafka-console-consumer.sh --bootstrap-server kafka1:9092 --topic test --from-beginning
+# from host: bin/kafka-console-consumer.sh --bootstrap-server localhost:9093 --topic test --from-beginning
+
+      docker service create \
+         --name kafka1 \
+         --mount type=volume,source=kafka-swarm-logs,destination=/tmp/kafka-logs \
+         --publish 9093:9093 \
+         --network kafka-net \
+         --mode global \
+         --constraint node.labels.kafka==1 \
+          kafka:latest \
+        /kafka/bin/kafka-server-start.sh /kafka/config/server.properties \
+           --override zookeeper.connect=zookeeper:2181 \
+           --override listeners=LISTENER1://:9092,LISTENER2://0.0.0.0:9093 \
+           --override listener.security.protocol.map=LISTENER1:PLAINTEXT,LISTENER2:PLAINTEXT \
+          --override inter.broker.listener.name=LISTENER1 \
+           --override advertised.listeners=LISTENER1://:9092,LISTENER2://Muktas-MacBook-Pro.local:9093 \
+           --override broker.id=1
+
+  # Prateek's theory 1: This will work from inside and outside - didn't
+  docker service create \
+     --name kafka1 \
+     --mount type=volume,source=kafka-swarm-logs,destination=/tmp/kafka-logs \
+     --publish 9093:9093 \
+     --network kafka-net \
+     --mode global \
+     --constraint node.labels.kafka==1 \
+      kafka:latest \
+    /kafka/bin/kafka-server-start.sh /kafka/config/server.properties \
+       --override zookeeper.connect=zookeeper:2181 \
+       --override listeners=LISTENER2://0.0.0.0:9093 \
+       --override listener.security.protocol.map=LISTENER2:PLAINTEXT \
+      --override inter.broker.listener.name=LISTENER2 \
+       --override advertised.listeners=LISTENER2://:9093 \
+       --override broker.id=1
+
+
+  docker service create \
+        --name kafka1 \
+        --mount type=volume,source=kafka-swarm-logs,destination=/tmp/kafka-logs \
+        --publish 9094:9094 \
+        --network kafka-net \
+        --mode global \
+        --constraint node.labels.kafka==1 \
+         kafka:latest \
+       /kafka/bin/kafka-server-start.sh /kafka/config/server.properties \
+          --override zookeeper.connect=zookeeper:2181 \
+          --override listeners=LISTENER1://kafka1-1:9092 \
+          --override listener.security.protocol.map=LISTENER1:PLAINTEXT \
+         --override inter.broker.listener.name=LISTENER1 \
+          --override advertised.listeners=LISTENER1://kafka1-1:9092 \
+          --override broker.id=1
+
+    docker service create \
+        --name kafka1 \
+        --mount type=volume,source=kafka-swarm-logs,destination=/tmp/kafka-logs \
+        --network kafka-net \
+        --mode global \
+        --endpoint-mode dnsrr \
+        --constraint node.labels.kafka==1 \
+         kafka:latest \
+       /kafka/bin/kafka-server-start.sh /kafka/config/server.properties \
+          --override zookeeper.connect=zookeeper:2181 \
+          --override listeners=LISTENER1://kafka1:9092 \
+          --override listener.security.protocol.map=LISTENER1:PLAINTEXT \
+         --override inter.broker.listener.name=LISTENER1 \
+          --override advertised.listeners=LISTENER1://kafka1:9092 \
+          --override broker.id=1
+
+
+     --endpoint-mode
+
+#-----------------------------
+     docker service create \
+        --name zookeeper \
+        --mount type=volume,source=zoo-swarm-data,destination=/tmp/zookeeper \
+        --publish 2181:2181 \
+        --constraint node.labels.zoo==1 \
+        --mode global \
+        kafka:latest \
+        /kafka/bin/zookeeper-server-start.sh /kafka/config/zookeeper.properties
+
+     docker service create \
+        --name kafka1 \
+        --mount type=volume,source=kafka-swarm-logs,destination=/tmp/kafka-logs \
+        --publish 9094:9094 \
+        --mode global \
+        --constraint node.labels.kafka==1 \
+         kafka:latest \
+       /kafka/bin/kafka-server-start.sh /kafka/config/server.properties \
+          --override zookeeper.connect=zookeeper:2181 \
+          --override listeners=INT://kafka1:9093,EXT://kafka1:9094 \
+          --override listener.security.protocol.map=INT:PLAINTEXT,EXT:PLAINTEXT \
+          --override inter.broker.listener.name=INT \
+          --override advertised.listeners=INT://kafka1:9093,EXT://localhost:9094 \
+          --override broker.id=1
+
+--------
+
+  bin/kafka-topics.sh --list --zookeeper localhost:2181
+
+  bin/kafka-topics.sh  \
+    --zookeeper localhost:2181 \
+    --create \
+    --replication-factor 1 \
+    --partitions 1 \
+    --topic test
+
+
+  bin/kafka-console-producer.sh \
+    --broker-list localhost:9092 \
+    --topic test
+
+    bin/kafka-console-producer.sh \
+      --broker-list tasks.kafka1:9092 \
+      --topic test
+
+  bin/kafka-console-producer.sh \
+    --broker-list kafak1:9092 \
+    --topic test
+  c4c903d3116
+
+    bin/kafka-console-consumer.sh --bootstrap-server tasks.kafka1:9092 --topic test --from-beginning
+    bin/kafka-console-consumer.sh --bootstrap-server kafka1:9092 --topic test --from-beginning
+
+
+      bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test --from-beginning
+
+    bin/kafka-console-consumer.sh --bootstrap-server localhost:9093 --topic test --from-beginning
+
+    bin/kafka-console-consumer.sh --bootstrap-server Muktas-MacBook-Pro.local:9093 --topic test --from-beginning
+
+    Muktas-MacBook-Pro.local
+  while :; do clear; your_command; sleep 2; done
+
+
+  bin/kafka-console-consumer.sh --bootstrap-server kafka1:9092 --topic test --from-beginning
+
+  -------
+
+
+  docker network create --driver overlay kafka-net
+
+  docker service create \
+     --name zookeeper \
+     --mount type=volume,source=zoo-swarm-data,destination=/tmp/zookeeper \
+     --publish 2181:2181 \
+     --network kafka-net \
+     --constraint node.labels.zoo==1 \
+     --mode global \
+     kafka:latest \
+     /kafka/bin/zookeeper-server-start.sh /kafka/config/zookeeper.properties
+
+ docker service create \
+    --name kafka1 \
+    --mount type=volume,source=kafka-swarm-logs,destination=/tmp/kafka-logs \
+    --publish 9093:9093 \
+    --network kafka-net \
+    --mode global \
+    --constraint node.labels.kafka==1 \
+     kafka:latest \
+   /kafka/bin/kafka-server-start.sh /kafka/config/server.properties \
+      --override listeners=LISTENER1://:9092,LISTENER2://0.0.0.0:9093 \
+      --override listener.security.protocol.map=LISTENER1:PLAINTEXT,LISTENER2:PLAINTEXT \
+     --override inter.broker.listener.name=LISTENER1 \
+      --override advertised.listeners=LISTENER1://:9092,LISTENER2://Muktas-MacBook-Pro.local:9093 \
+      --override broker.id=1

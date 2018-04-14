@@ -8,34 +8,34 @@ services:
     ports:
       - "2181:2181"
     networks:
-      - overlay
+      - kafka_nw
     deploy:
       mode: global
-      placement: 
-        constraints: 
+      placement:
+        constraints:
           - node.labels.zoo==1
     command: /kafka/bin/zookeeper-server-start.sh /kafka/config/zookeeper.properties
 
   kafka1:
-    image: kafka:latest
+    image:  --publish 2181:2181 \
     volumes:
        - kafka-single-logs:/tmp/kafka-logs
        - /var/run/docker.sock:/var/run/docker.sock
     ports:
        - "9094:9094"
     networks:
-       - overlay
+       - kafka_nw
     depends_on:
        - zookeeper
-    deploy: 
+    deploy:
       mode: global
-      placement: 
-        constraints: 
+      placement:
+        constraints:
           - node.labels.kafka==1
-    command: /kafka/bin/kafka-server-start.sh /kafka/config/server.properties --override zookeeper.connect=zookeeper:2181 --override listeners=EXT://kafka1:9094,INT://kafka1:9093 --override listener.security.protocol.map=INT:PLAINTEXT,EXT:PLAINTEXT --override inter.broker.listener.name=INT --override advertised.listeners=EXT://node3:9094,INT://kafka1:9093 --override broker.id=1
+    command: /kafka/bin/kafka-server-start.sh /kafka/config/server.properties --override zookeeper.connect=zookeeper:2181 --override listeners=EXT://kafka1:9094,INT://kafka1:9093 --override listener.security.protocol.map=INT:PLAINTEXT,EXT:PLAINTEXT --override inter.broker.listener.name=INT --override advertised.listeners=EXT://locahost:9094,INT://kafka1:9093 --override broker.id=1
 
 networks:
-  overlay:
+  kafka_nw:
 
 volumes:
   kafka-single-logs:

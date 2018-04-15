@@ -3,7 +3,7 @@ services:
   zookeeper:
     image: kafka:latest
     volumes:
-      - zoo-data:/tmp/zookeeper
+      - zoo-stack-data:/tmp/zookeeper
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - 2181:2181
@@ -19,7 +19,7 @@ services:
   kafka1:
     image: kafka:latest
     volumes:
-       - kafka1-logs:/tmp/kafka-logs
+       - kafka-stack-1-logs:/tmp/kafka-logs
        - /var/run/docker.sock:/var/run/docker.sock
     ports:
        - 9093:9093
@@ -35,7 +35,7 @@ services:
   kafka2:
     image: kafka:latest
     volumes:
-       - kafka2-logs:/tmp/kafka-logs
+       - kafka-stack-2-logs:/tmp/kafka-logs
        - /var/run/docker.sock:/var/run/docker.sock
     ports:
        - 9094:9094
@@ -51,7 +51,7 @@ services:
   kafka3:
     image: kafka:latest
     volumes:
-       - kafka3-logs:/tmp/kafka-logs
+       - kafka-stack-3-logs:/tmp/kafka-logs
        - /var/run/docker.sock:/var/run/docker.sock
     ports:
        - 9095:9095
@@ -68,7 +68,7 @@ networks:
   kafka-net:
 
 volumes:
-  kafka1-logs:
-  kafka2-logs:
-  kafka3-logs:
-  zoo-data:
+  kafka-stack-1-logs:
+  kafka-stack-2-logs:
+  kafka-stack-3-logs:
+  zoo-stack-data:

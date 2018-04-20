@@ -23,9 +23,9 @@ services:
        - kafka-net
     deploy:
       mode: global
-    command: /kafka/bin/kafka-server-start.sh /kafka/config/server.properties --override zookeeper.connect=zookeeper:2181 --override listeners=INT://:9092 --override listener.security.protocol.map=INT:PLAINTEXT --override inter.broker.listener.name=INT --override advertised.listeners=INT://:9092 --override broker.id=-1
+    command: /kafka/bin/kafka-server-start.sh /kafka/config/server.properties --override zookeeper.connect=zookeeper:2181 --override listeners=PLAINTEXT://:9092 --override listener.security.protocol.map=PLAINTEXT:PLAINTEXT --override inter.broker.listener.name=PLAINTEXT --override advertised.listeners=PLAINTEXT://:9092 --override broker.id=-1
 
-   rest-proxy:
+  rest-proxy:
       image: confluentinc/cp-kafka-rest:4.1.0
       networks:
          - kafka-net
@@ -34,8 +34,9 @@ services:
       deploy:
         replicas: 1
       environment:
-        KAFKA_REST_ZOOKEEPER_CONNECT: zookeeper:2181
-        KAFKA_REST_LISTENERS: http://node3:8082
+         KAFKA_REST_ZOOKEEPER_CONNECT: zookeeper:2181
+         KAFKA_REST_LISTENERS: http://0.0.0.0:8082
+         KAFKA_REST_HOST_NAME: localhost
 
 networks:
   kafka-net:

@@ -1,6 +1,6 @@
 version: '3'
 services:
-  zookeeper:
+  zk1:
     image: kafka:latest
     volumes:
       - zoo-service-data:/tmp/zookeeper
@@ -12,10 +12,10 @@ services:
       mode: global
       placement:
         constraints:
-          - node.labels.zoo==1
-    command: /kafka/bin/zookeeper-server-start.sh /kafka/config/zookeeper.properties
+          - node.labels.kafka==1
+    command: /kafka/startZookeeper.sh 1 zk1,zk2,zk3 & /kafka/bin/zookeeper-server-start.sh /kafka/config/zookeeper.properties
 
-  zookeeper:
+  zk2:
     image: kafka:latest
     volumes:
       - zoo-service-data:/tmp/zookeeper
@@ -27,8 +27,23 @@ services:
       mode: global
       placement:
         constraints:
-          - node.labels.zoo==1
-    command: /kafka/bin/zookeeper-server-start.sh /kafka/config/zookeeper.properties
+          - node.labels.kafka==2
+    command: /kafka/startZookeeper.sh 2 zk1,zk2,zk3 & /kafka/bin/zookeeper-server-start.sh /kafka/config/zookeeper.properties
+
+  zk3:
+    image: kafka:latest
+    volumes:
+      - zoo-service-data:/tmp/zookeeper
+    ports:
+      - 2181:2181
+    networks:
+      - kafka-net
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.labels.kafka==3
+    command: /kafka/startZookeeper.sh 3 zk1,zk2,zk3 & /kafka/bin/zookeeper-server-start.sh /kafka/config/zookeeper.properties
 
   kafka:
     image: kafka:latest

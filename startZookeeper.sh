@@ -6,8 +6,8 @@ dataDir="/tmp/zookeeper"
 zkConfDir="/kafka/config"
 
 #TODO
-dataDir="/Users/prateeknegi/kafka-docker/zoo-data"
-zkConfDir="/Users/prateeknegi/kafka-docker/zk_config"
+#dataDir="/Users/prateeknegi/kafka-docker/zoo-data"
+#zkConfDir="/Users/prateeknegi/kafka-docker/zk_config"
 
 echo "$zk_id" | tee $dataDir/myid
 

@@ -28,6 +28,7 @@ do
         # if IP's are used instead of hostnames, every ZooKeeper host has to specify itself as follows
         zk_node=0.0.0.0
     fi
+  zk_config="initLimit=5\nsyncLimit=2\ntickTime=2000\n"
   zk_config="$zk_config"$'\n'"server.$zk_node_id=$zk_node:2888:3888"
 done
 

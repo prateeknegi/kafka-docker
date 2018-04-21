@@ -13,14 +13,14 @@ services:
       placement:
         constraints:
           - node.labels.kafka==1
-    command: /kafka/startZookeeper.sh 1 zk1,zk2,zk3 & /kafka/bin/zookeeper-server-start.sh /kafka/config/zookeeper.properties
+    command: /bin/bash -c "/kafka/startZookeeper.sh 1 zk1,zk2,zk3 && /kafka/bin/zookeeper-server-start.sh /kafka/config/zookeeper.properties"
 
   zk2:
     image: kafka:latest
     volumes:
       - zoo-service-data:/tmp/zookeeper
     ports:
-      - 2181:2181
+      - 2182:2181
     networks:
       - kafka-net
     deploy:
@@ -28,14 +28,14 @@ services:
       placement:
         constraints:
           - node.labels.kafka==2
-    command: /kafka/startZookeeper.sh 2 zk1,zk2,zk3 & /kafka/bin/zookeeper-server-start.sh /kafka/config/zookeeper.properties
+    command: /bin/bash -c "/kafka/startZookeeper.sh 2 zk1,zk2,zk3 && /kafka/bin/zookeeper-server-start.sh /kafka/config/zookeeper.properties"
 
   zk3:
     image: kafka:latest
     volumes:
       - zoo-service-data:/tmp/zookeeper
     ports:
-      - 2181:2181
+      - 2183:2181
     networks:
       - kafka-net
     deploy:
@@ -43,7 +43,7 @@ services:
       placement:
         constraints:
           - node.labels.kafka==3
-    command: /kafka/startZookeeper.sh 3 zk1,zk2,zk3 & /kafka/bin/zookeeper-server-start.sh /kafka/config/zookeeper.properties
+    command: /bin/bash -c "/kafka/startZookeeper.sh 3 zk1,zk2,zk3 && /kafka/bin/zookeeper-server-start.sh /kafka/config/zookeeper.properties"
 
   kafka:
     image: kafka:latest
@@ -53,7 +53,7 @@ services:
        - kafka-net
     deploy:
       mode: global
-    command: /kafka/bin/kafka-server-start.sh /kafka/config/server.properties --override zookeeper.connect=zookeeper:2181 --override listeners=PLAINTEXT://:9092 --override listener.security.protocol.map=PLAINTEXT:PLAINTEXT --override inter.broker.listener.name=PLAINTEXT --override advertised.listeners=PLAINTEXT://:9092 --override broker.id=-1
+    command: /kafka/bin/kafka-server-start.sh /kafka/config/server.properties --override zookeeper.connect=zk1:2181 --override listeners=PLAINTEXT://:9092 --override listener.security.protocol.map=PLAINTEXT:PLAINTEXT --override inter.broker.listener.name=PLAINTEXT --override advertised.listeners=PLAINTEXT://:9092 --override broker.id=-1
 
   rest-proxy:
       image: confluentinc/cp-kafka-rest:4.1.0
@@ -64,7 +64,7 @@ services:
       deploy:
         replicas: 1
       environment:
-         KAFKA_REST_ZOOKEEPER_CONNECT: zookeeper:2181
+         KAFKA_REST_ZOOKEEPER_CONNECT: zk1:2181
          KAFKA_REST_LISTENERS: http://0.0.0.0:8082
          KAFKA_REST_HOST_NAME: localhost
 

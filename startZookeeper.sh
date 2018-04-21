@@ -23,6 +23,11 @@ for index in "${!zk_nodes[@]}"
 do
   zk_node_id=$(($index+1))
   zk_node=${zk_nodes[index]}
+  if [ $zk_node_id == $zk_id ]
+    then
+        # if IP's are used instead of hostnames, every ZooKeeper host has to specify itself as follows
+        zk_node=0.0.0.0
+    fi
   zk_config="$zk_config"$'\n'"server.$zk_node_id=$zk_node:2888:3888"
 done
 
